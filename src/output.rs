@@ -139,11 +139,7 @@ impl OutputFormatter {
                 if let Some(meta) = pagination {
                     if let (Some(page), Some(count)) = (meta.page, meta.count) {
                         let limit = meta.limit.unwrap_or(100);
-                        let total_pages = if count == 0 {
-                            1
-                        } else {
-                            count.div_ceil(limit)
-                        };
+                        let total_pages = if count == 0 { 1 } else { count.div_ceil(limit) };
                         eprintln!(
                             "{}",
                             format!("--- Page {}/{} ({} total) ---", page, total_pages, count)

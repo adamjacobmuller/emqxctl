@@ -3,7 +3,11 @@ use clap::{Args, Parser, Subcommand};
 use crate::output::OutputFormat;
 
 #[derive(Parser)]
-#[command(name = "emqxctl", version, about = "CLI for the EMQX Management REST API")]
+#[command(
+    name = "emqxctl",
+    version,
+    about = "CLI for the EMQX Management REST API"
+)]
 pub struct Cli {
     #[command(flatten)]
     pub global: GlobalArgs,

@@ -1,8 +1,8 @@
-use anyhow::Result;
-use clap::Args;
 use crate::client::EmqxClient;
 use crate::input::read_input_file;
 use crate::output::OutputFormatter;
+use anyhow::Result;
+use clap::Args;
 
 #[derive(Args)]
 pub struct PublishArgs {

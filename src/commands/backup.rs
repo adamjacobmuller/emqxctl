@@ -1,7 +1,7 @@
-use anyhow::Result;
-use clap::Subcommand;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum BackupCommand {
@@ -20,17 +20,39 @@ pub enum BackupCommand {
         #[arg(short = 'f', long)]
         file: String,
     },
-    Delete { name: String },
+    Delete {
+        name: String,
+    },
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "FILENAME", json_path: "filename", max_width: None },
-    Column { header: "SIZE", json_path: "size", max_width: None },
-    Column { header: "CREATED AT", json_path: "created_at", max_width: None },
-    Column { header: "NODE", json_path: "node", max_width: None },
+    Column {
+        header: "FILENAME",
+        json_path: "filename",
+        max_width: None,
+    },
+    Column {
+        header: "SIZE",
+        json_path: "size",
+        max_width: None,
+    },
+    Column {
+        header: "CREATED AT",
+        json_path: "created_at",
+        max_width: None,
+    },
+    Column {
+        header: "NODE",
+        json_path: "node",
+        max_width: None,
+    },
 ];
 
-pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &BackupCommand) -> Result<()> {
+pub async fn execute(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    cmd: &BackupCommand,
+) -> Result<()> {
     match cmd {
         BackupCommand::List => {
             let value = client.get("/data/export").await?;
@@ -51,7 +73,9 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &BackupCom
             } else {
                 output.clone()
             };
-            client.download(&format!("/data/export/{}", name), &dest).await?;
+            client
+                .download(&format!("/data/export/{}", name), &dest)
+                .await?;
             fmt.print_success(&format!("Backup '{}' downloaded to '{}'", name, dest));
         }
         BackupCommand::Upload { file } => {
@@ -64,7 +88,13 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &BackupCom
             fmt.print_success("Backup imported");
         }
         BackupCommand::Delete { name } => {
-            super::handle_delete(client, fmt, &format!("/data/export/{}", name), &format!("Backup '{}' deleted", name)).await?;
+            super::handle_delete(
+                client,
+                fmt,
+                &format!("/data/export/{}", name),
+                &format!("Backup '{}' deleted", name),
+            )
+            .await?;
         }
     }
     Ok(())

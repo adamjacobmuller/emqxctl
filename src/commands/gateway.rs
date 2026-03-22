@@ -1,9 +1,9 @@
-use anyhow::Result;
-use clap::Subcommand;
-use reqwest::Method;
 use crate::cli::PaginationArgs;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
+use reqwest::Method;
 
 #[derive(Subcommand)]
 pub enum GatewayCommand {
@@ -47,8 +47,12 @@ pub enum GatewayClientCommand {
         #[command(flatten)]
         pagination: PaginationArgs,
     },
-    Get { clientid: String },
-    Kick { clientid: String },
+    Get {
+        clientid: String,
+    },
+    Kick {
+        clientid: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -84,7 +88,9 @@ pub enum GatewayAuthnUsersCommand {
 #[derive(Subcommand)]
 pub enum GatewayListenerCommand {
     List,
-    Get { id: String },
+    Get {
+        id: String,
+    },
     Create {
         #[arg(short = 'f', long)]
         file: String,
@@ -94,36 +100,98 @@ pub enum GatewayListenerCommand {
         #[arg(short = 'f', long)]
         file: String,
     },
-    Delete { id: String },
+    Delete {
+        id: String,
+    },
 }
 
 const GW_LIST_COLUMNS: &[Column] = &[
-    Column { header: "NAME", json_path: "name", max_width: None },
-    Column { header: "STATUS", json_path: "status", max_width: None },
-    Column { header: "ENABLE", json_path: "enable", max_width: None },
-    Column { header: "CURRENT CONNECTIONS", json_path: "current_connections", max_width: None },
+    Column {
+        header: "NAME",
+        json_path: "name",
+        max_width: None,
+    },
+    Column {
+        header: "STATUS",
+        json_path: "status",
+        max_width: None,
+    },
+    Column {
+        header: "ENABLE",
+        json_path: "enable",
+        max_width: None,
+    },
+    Column {
+        header: "CURRENT CONNECTIONS",
+        json_path: "current_connections",
+        max_width: None,
+    },
 ];
 
 const CLIENT_COLUMNS: &[Column] = &[
-    Column { header: "CLIENTID", json_path: "clientid", max_width: Some(30) },
-    Column { header: "USERNAME", json_path: "username", max_width: Some(20) },
-    Column { header: "IP ADDRESS", json_path: "ip_address", max_width: None },
-    Column { header: "CONNECTED", json_path: "connected", max_width: None },
+    Column {
+        header: "CLIENTID",
+        json_path: "clientid",
+        max_width: Some(30),
+    },
+    Column {
+        header: "USERNAME",
+        json_path: "username",
+        max_width: Some(20),
+    },
+    Column {
+        header: "IP ADDRESS",
+        json_path: "ip_address",
+        max_width: None,
+    },
+    Column {
+        header: "CONNECTED",
+        json_path: "connected",
+        max_width: None,
+    },
 ];
 
 const LISTENER_COLUMNS: &[Column] = &[
-    Column { header: "ID", json_path: "id", max_width: None },
-    Column { header: "TYPE", json_path: "type", max_width: None },
-    Column { header: "BIND", json_path: "bind", max_width: None },
-    Column { header: "RUNNING", json_path: "running", max_width: None },
+    Column {
+        header: "ID",
+        json_path: "id",
+        max_width: None,
+    },
+    Column {
+        header: "TYPE",
+        json_path: "type",
+        max_width: None,
+    },
+    Column {
+        header: "BIND",
+        json_path: "bind",
+        max_width: None,
+    },
+    Column {
+        header: "RUNNING",
+        json_path: "running",
+        max_width: None,
+    },
 ];
 
 const USER_COLUMNS: &[Column] = &[
-    Column { header: "USER ID", json_path: "user_id", max_width: None },
-    Column { header: "IS SUPERUSER", json_path: "is_superuser", max_width: None },
+    Column {
+        header: "USER ID",
+        json_path: "user_id",
+        max_width: None,
+    },
+    Column {
+        header: "IS SUPERUSER",
+        json_path: "is_superuser",
+        max_width: None,
+    },
 ];
 
-pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &GatewayCommand) -> Result<()> {
+pub async fn execute(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    cmd: &GatewayCommand,
+) -> Result<()> {
     match cmd {
         GatewayCommand::List => {
             let value = client.get("/gateways").await?;
@@ -135,21 +203,48 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &GatewayCo
             fmt.print_value(&value);
         }
         GatewayCommand::Enable { name } => {
-            client.put(&format!("/gateways/{}", name), &serde_json::json!({"enable": true})).await?;
+            client
+                .put(
+                    &format!("/gateways/{}", name),
+                    &serde_json::json!({"enable": true}),
+                )
+                .await?;
             fmt.print_success(&format!("Gateway '{}' enabled", name));
         }
         GatewayCommand::Disable { name } => {
-            client.put(&format!("/gateways/{}", name), &serde_json::json!({"enable": false})).await?;
+            client
+                .put(
+                    &format!("/gateways/{}", name),
+                    &serde_json::json!({"enable": false}),
+                )
+                .await?;
             fmt.print_success(&format!("Gateway '{}' disabled", name));
         }
         GatewayCommand::Update { name, file } => {
-            super::handle_create_or_update(client, fmt, Method::PUT, &format!("/gateways/{}", name), file, &format!("Gateway '{}' updated", name)).await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::PUT,
+                &format!("/gateways/{}", name),
+                file,
+                &format!("Gateway '{}' updated", name),
+            )
+            .await?;
         }
         GatewayCommand::Clients { name, command } => {
             let base = format!("/gateways/{}/clients", name);
             match command {
                 GatewayClientCommand::List { pagination } => {
-                    super::handle_paginated_list(client, fmt, &base, &[], pagination, CLIENT_COLUMNS, None).await?;
+                    super::handle_paginated_list(
+                        client,
+                        fmt,
+                        &base,
+                        &[],
+                        pagination,
+                        CLIENT_COLUMNS,
+                        None,
+                    )
+                    .await?;
                 }
                 GatewayClientCommand::Get { clientid } => {
                     let value = client.get(&format!("{}/{}", base, clientid)).await?;
@@ -169,22 +264,56 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &GatewayCo
                     fmt.print_value(&value);
                 }
                 GatewayAuthnCommand::Create { file } => {
-                    super::handle_create_or_update(client, fmt, Method::POST, &base, file, "Gateway authenticator created").await?;
+                    super::handle_create_or_update(
+                        client,
+                        fmt,
+                        Method::POST,
+                        &base,
+                        file,
+                        "Gateway authenticator created",
+                    )
+                    .await?;
                 }
                 GatewayAuthnCommand::Update { file } => {
-                    super::handle_create_or_update(client, fmt, Method::PUT, &base, file, "Gateway authenticator updated").await?;
+                    super::handle_create_or_update(
+                        client,
+                        fmt,
+                        Method::PUT,
+                        &base,
+                        file,
+                        "Gateway authenticator updated",
+                    )
+                    .await?;
                 }
                 GatewayAuthnCommand::Delete => {
-                    super::handle_delete(client, fmt, &base, "Gateway authenticator deleted").await?;
+                    super::handle_delete(client, fmt, &base, "Gateway authenticator deleted")
+                        .await?;
                 }
                 GatewayAuthnCommand::Users { command: users_cmd } => {
                     let users_base = format!("{}/users", base);
                     match users_cmd {
                         GatewayAuthnUsersCommand::List { pagination } => {
-                            super::handle_paginated_list(client, fmt, &users_base, &[], pagination, USER_COLUMNS, None).await?;
+                            super::handle_paginated_list(
+                                client,
+                                fmt,
+                                &users_base,
+                                &[],
+                                pagination,
+                                USER_COLUMNS,
+                                None,
+                            )
+                            .await?;
                         }
                         GatewayAuthnUsersCommand::Create { file } => {
-                            super::handle_create_or_update(client, fmt, Method::POST, &users_base, file, "Gateway auth user created").await?;
+                            super::handle_create_or_update(
+                                client,
+                                fmt,
+                                Method::POST,
+                                &users_base,
+                                file,
+                                "Gateway auth user created",
+                            )
+                            .await?;
                         }
                     }
                 }
@@ -203,13 +332,35 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &GatewayCo
                     fmt.print_value(&value);
                 }
                 GatewayListenerCommand::Create { file } => {
-                    super::handle_create_or_update(client, fmt, Method::POST, &base, file, "Gateway listener created").await?;
+                    super::handle_create_or_update(
+                        client,
+                        fmt,
+                        Method::POST,
+                        &base,
+                        file,
+                        "Gateway listener created",
+                    )
+                    .await?;
                 }
                 GatewayListenerCommand::Update { id, file } => {
-                    super::handle_create_or_update(client, fmt, Method::PUT, &format!("{}/{}", base, id), file, "Gateway listener updated").await?;
+                    super::handle_create_or_update(
+                        client,
+                        fmt,
+                        Method::PUT,
+                        &format!("{}/{}", base, id),
+                        file,
+                        "Gateway listener updated",
+                    )
+                    .await?;
                 }
                 GatewayListenerCommand::Delete { id } => {
-                    super::handle_delete(client, fmt, &format!("{}/{}", base, id), &format!("Gateway listener '{}' deleted", id)).await?;
+                    super::handle_delete(
+                        client,
+                        fmt,
+                        &format!("{}/{}", base, id),
+                        &format!("Gateway listener '{}' deleted", id),
+                    )
+                    .await?;
                 }
             }
         }

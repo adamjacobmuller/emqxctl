@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use crate::error::AppError;
+use anyhow::{Context, Result};
 
 /// Read input from a file path or stdin (if path is "-").
 /// Tries JSON first, then YAML.
@@ -15,8 +15,7 @@ pub fn read_input_file(path: &str) -> Result<serde_json::Value> {
         if !std::path::Path::new(path).exists() {
             return Err(AppError::FileNotFound(path.to_string()).into());
         }
-        std::fs::read_to_string(path)
-            .with_context(|| format!("Failed to read file: {}", path))?
+        std::fs::read_to_string(path).with_context(|| format!("Failed to read file: {}", path))?
     };
 
     // Try JSON first

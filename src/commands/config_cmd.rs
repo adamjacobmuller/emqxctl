@@ -1,10 +1,10 @@
+use crate::client::EmqxClient;
+use crate::config::Config;
+use crate::output::OutputFormatter;
 use anyhow::Result;
 use clap::Subcommand;
 use colored::Colorize;
 use reqwest::Method;
-use crate::client::EmqxClient;
-use crate::config::Config;
-use crate::output::OutputFormatter;
 
 #[derive(Subcommand)]
 pub enum ConfigCommand {
@@ -66,7 +66,14 @@ pub fn is_local_command(cmd: &ConfigCommand) -> bool {
 
 pub fn execute_local(cmd: &ConfigCommand) -> Result<()> {
     match cmd {
-        ConfigCommand::SetContext { name, url, api_key, api_secret, username, password } => {
+        ConfigCommand::SetContext {
+            name,
+            url,
+            api_key,
+            api_secret,
+            username,
+            password,
+        } => {
             let mut config = Config::load()?;
             let ctx = crate::config::ContextConfig {
                 url: url.clone(),
@@ -98,10 +105,14 @@ pub fn execute_local(cmd: &ConfigCommand) -> Result<()> {
                 return Ok(());
             }
             let current = config.current_context.as_deref().unwrap_or("");
-            println!("{:<4} {:<20} {}", "", "NAME", "URL");
+            println!("{:<4} {:<20} URL", "", "NAME");
             for (name, ctx) in &config.contexts {
                 let marker = if name == current { "*" } else { "" };
-                let auth_type = if ctx.api_key.is_some() { "api-key" } else { "dashboard" };
+                let auth_type = if ctx.api_key.is_some() {
+                    "api-key"
+                } else {
+                    "dashboard"
+                };
                 println!("{:<4} {:<20} {} ({})", marker, name, ctx.url, auth_type);
             }
         }
@@ -128,7 +139,11 @@ pub fn execute_local(cmd: &ConfigCommand) -> Result<()> {
     Ok(())
 }
 
-pub async fn execute_remote(client: &EmqxClient, fmt: &OutputFormatter, cmd: &ConfigCommand) -> Result<()> {
+pub async fn execute_remote(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    cmd: &ConfigCommand,
+) -> Result<()> {
     match cmd {
         ConfigCommand::Get { root_key } => {
             let path = if let Some(key) = root_key {
@@ -140,10 +155,23 @@ pub async fn execute_remote(client: &EmqxClient, fmt: &OutputFormatter, cmd: &Co
             fmt.print_value(&value);
         }
         ConfigCommand::Update { root_key, file } => {
-            super::handle_create_or_update(client, fmt, Method::PUT, &format!("/configs/{}", root_key), file, &format!("Config '{}' updated", root_key)).await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::PUT,
+                &format!("/configs/{}", root_key),
+                file,
+                &format!("Config '{}' updated", root_key),
+            )
+            .await?;
         }
         ConfigCommand::Reset { root_key } => {
-            client.post(&format!("/configs/{}/reset", root_key), &serde_json::json!({})).await?;
+            client
+                .post(
+                    &format!("/configs/{}/reset", root_key),
+                    &serde_json::json!({}),
+                )
+                .await?;
             fmt.print_success(&format!("Config '{}' reset", root_key));
         }
         ConfigCommand::Global => {

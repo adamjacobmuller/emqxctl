@@ -1,13 +1,15 @@
+use crate::client::EmqxClient;
+use crate::output::{Column, OutputFormatter};
 use anyhow::Result;
 use clap::Subcommand;
 use reqwest::Method;
-use crate::client::EmqxClient;
-use crate::output::{Column, OutputFormatter};
 
 #[derive(Subcommand)]
 pub enum SchemaCommand {
     List,
-    Get { name: String },
+    Get {
+        name: String,
+    },
     Create {
         #[arg(short = 'f', long)]
         file: String,
@@ -17,16 +19,34 @@ pub enum SchemaCommand {
         #[arg(short = 'f', long)]
         file: String,
     },
-    Delete { name: String },
+    Delete {
+        name: String,
+    },
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "NAME", json_path: "name", max_width: None },
-    Column { header: "TYPE", json_path: "type", max_width: None },
-    Column { header: "DESCRIPTION", json_path: "description", max_width: Some(40) },
+    Column {
+        header: "NAME",
+        json_path: "name",
+        max_width: None,
+    },
+    Column {
+        header: "TYPE",
+        json_path: "type",
+        max_width: None,
+    },
+    Column {
+        header: "DESCRIPTION",
+        json_path: "description",
+        max_width: Some(40),
+    },
 ];
 
-pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &SchemaCommand) -> Result<()> {
+pub async fn execute(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    cmd: &SchemaCommand,
+) -> Result<()> {
     match cmd {
         SchemaCommand::List => {
             let value = client.get("/schemas").await?;
@@ -38,13 +58,35 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &SchemaCom
             fmt.print_value(&value);
         }
         SchemaCommand::Create { file } => {
-            super::handle_create_or_update(client, fmt, Method::POST, "/schemas", file, "Schema created").await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::POST,
+                "/schemas",
+                file,
+                "Schema created",
+            )
+            .await?;
         }
         SchemaCommand::Update { name, file } => {
-            super::handle_create_or_update(client, fmt, Method::PUT, &format!("/schemas/{}", name), file, "Schema updated").await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::PUT,
+                &format!("/schemas/{}", name),
+                file,
+                "Schema updated",
+            )
+            .await?;
         }
         SchemaCommand::Delete { name } => {
-            super::handle_delete(client, fmt, &format!("/schemas/{}", name), &format!("Schema '{}' deleted", name)).await?;
+            super::handle_delete(
+                client,
+                fmt,
+                &format!("/schemas/{}", name),
+                &format!("Schema '{}' deleted", name),
+            )
+            .await?;
         }
     }
     Ok(())

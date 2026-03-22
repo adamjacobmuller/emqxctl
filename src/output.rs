@@ -109,10 +109,8 @@ impl OutputFormatter {
                 }
 
                 // Build table data
-                let headers: Vec<String> = all_columns
-                    .iter()
-                    .map(|c| c.header.to_string())
-                    .collect();
+                let headers: Vec<String> =
+                    all_columns.iter().map(|c| c.header.to_string()).collect();
 
                 let mut rows: Vec<Vec<String>> = Vec::new();
                 for item in items {
@@ -134,9 +132,7 @@ impl OutputFormatter {
                 let mut all_rows = vec![headers];
                 all_rows.extend(rows);
 
-                let table = Table::from_iter(all_rows)
-                    .with(Style::blank())
-                    .to_string();
+                let table = Table::from_iter(all_rows).with(Style::blank()).to_string();
 
                 println!("{}", table);
 
@@ -146,7 +142,7 @@ impl OutputFormatter {
                         let total_pages = if count == 0 {
                             1
                         } else {
-                            (count + limit - 1) / limit
+                            count.div_ceil(limit)
                         };
                         eprintln!(
                             "{}",
@@ -197,8 +193,10 @@ impl OutputFormatter {
             OutputFormat::Json => {
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&serde_json::json!({"status": "ok", "message": msg}))
-                        .unwrap()
+                    serde_json::to_string_pretty(
+                        &serde_json::json!({"status": "ok", "message": msg})
+                    )
+                    .unwrap()
                 );
             }
             OutputFormat::Yaml => {

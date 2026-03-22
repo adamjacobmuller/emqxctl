@@ -1,12 +1,14 @@
-use anyhow::Result;
-use clap::Subcommand;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum AdminCommand {
     List,
-    Get { username: String },
+    Get {
+        username: String,
+    },
     Create {
         #[arg(long)]
         username: String,
@@ -20,7 +22,9 @@ pub enum AdminCommand {
         #[arg(long)]
         role: String,
     },
-    Delete { username: String },
+    Delete {
+        username: String,
+    },
     #[command(name = "change-password")]
     ChangePassword {
         username: String,
@@ -32,9 +36,21 @@ pub enum AdminCommand {
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "USERNAME", json_path: "username", max_width: None },
-    Column { header: "ROLE", json_path: "role", max_width: None },
-    Column { header: "DESCRIPTION", json_path: "description", max_width: Some(40) },
+    Column {
+        header: "USERNAME",
+        json_path: "username",
+        max_width: None,
+    },
+    Column {
+        header: "ROLE",
+        json_path: "role",
+        max_width: None,
+    },
+    Column {
+        header: "DESCRIPTION",
+        json_path: "description",
+        max_width: Some(40),
+    },
 ];
 
 pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &AdminCommand) -> Result<()> {
@@ -47,7 +63,11 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &AdminComm
         AdminCommand::Get { username } => {
             super::handle_get(client, fmt, &format!("/users/{}", username), LIST_COLUMNS).await?;
         }
-        AdminCommand::Create { username, password, role } => {
+        AdminCommand::Create {
+            username,
+            password,
+            role,
+        } => {
             let mut body = serde_json::json!({
                 "username": username,
                 "password": password,
@@ -68,14 +88,26 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &AdminComm
             fmt.print_success(&format!("User '{}' updated", username));
         }
         AdminCommand::Delete { username } => {
-            super::handle_delete(client, fmt, &format!("/users/{}", username), &format!("User '{}' deleted", username)).await?;
+            super::handle_delete(
+                client,
+                fmt,
+                &format!("/users/{}", username),
+                &format!("User '{}' deleted", username),
+            )
+            .await?;
         }
-        AdminCommand::ChangePassword { username, old_password, new_password } => {
+        AdminCommand::ChangePassword {
+            username,
+            old_password,
+            new_password,
+        } => {
             let body = serde_json::json!({
                 "old_pwd": old_password,
                 "new_pwd": new_password,
             });
-            client.put(&format!("/users/{}/change_pwd", username), &body).await?;
+            client
+                .put(&format!("/users/{}/change_pwd", username), &body)
+                .await?;
             fmt.print_success(&format!("Password changed for '{}'", username));
         }
     }

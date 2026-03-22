@@ -1,42 +1,42 @@
-pub mod status;
-pub mod node;
-pub mod cluster;
+pub mod action;
+pub mod admin;
+pub mod alarm;
+pub mod api;
+pub mod apikey;
+pub mod authn;
+pub mod authz;
+pub mod backup;
+pub mod ban;
+pub mod cert;
 pub mod clients;
-pub mod topic;
-pub mod subscription;
+pub mod cluster;
+pub mod completion;
+pub mod config_cmd;
+pub mod connector;
+pub mod gateway;
+pub mod listener;
+pub mod metrics;
+pub mod node;
+pub mod plugin;
 pub mod publish;
 pub mod retainer;
 pub mod rule;
-pub mod connector;
-pub mod action;
-pub mod source;
-pub mod authn;
-pub mod authz;
-pub mod ban;
-pub mod listener;
-pub mod metrics;
-pub mod alarm;
-pub mod trace;
-pub mod config_cmd;
-pub mod plugin;
-pub mod apikey;
-pub mod admin;
-pub mod gateway;
 pub mod schema;
 pub mod slow_sub;
+pub mod source;
+pub mod status;
+pub mod subscription;
+pub mod topic;
 pub mod topic_metrics;
-pub mod backup;
-pub mod cert;
-pub mod api;
-pub mod completion;
+pub mod trace;
 
 // Shared helpers
-use anyhow::Result;
-use reqwest::Method;
-use crate::client::EmqxClient;
 use crate::cli::PaginationArgs;
+use crate::client::EmqxClient;
 use crate::input::read_input_file;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use reqwest::Method;
 
 pub async fn handle_paginated_list(
     client: &EmqxClient,
@@ -51,7 +51,9 @@ pub async fn handle_paginated_list(
         let items = client.get_all_pages(path, query, pagination.limit).await?;
         fmt.print_list(&items, columns, wide_columns, None);
     } else {
-        let (items, meta) = client.get_paginated(path, query, pagination.page, pagination.limit).await?;
+        let (items, meta) = client
+            .get_paginated(path, query, pagination.page, pagination.limit)
+            .await?;
         fmt.print_list(&items, columns, wide_columns, Some(&meta));
     }
     Ok(())

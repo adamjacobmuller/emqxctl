@@ -1,7 +1,7 @@
-use anyhow::Result;
-use clap::Subcommand;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum TopicMetricsCommand {
@@ -12,12 +12,28 @@ pub enum TopicMetricsCommand {
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "TOPIC", json_path: "topic", max_width: Some(50) },
-    Column { header: "CREATE TIME", json_path: "create_time", max_width: None },
-    Column { header: "RESET TIME", json_path: "reset_time", max_width: None },
+    Column {
+        header: "TOPIC",
+        json_path: "topic",
+        max_width: Some(50),
+    },
+    Column {
+        header: "CREATE TIME",
+        json_path: "create_time",
+        max_width: None,
+    },
+    Column {
+        header: "RESET TIME",
+        json_path: "reset_time",
+        max_width: None,
+    },
 ];
 
-pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &TopicMetricsCommand) -> Result<()> {
+pub async fn execute(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    cmd: &TopicMetricsCommand,
+) -> Result<()> {
     match cmd {
         TopicMetricsCommand::List => {
             let value = client.get("/topic-metrics").await?;

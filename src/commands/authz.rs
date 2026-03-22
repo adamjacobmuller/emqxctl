@@ -1,8 +1,8 @@
+use crate::client::EmqxClient;
+use crate::output::{Column, OutputFormatter};
 use anyhow::Result;
 use clap::Subcommand;
 use reqwest::Method;
-use crate::client::EmqxClient;
-use crate::output::{Column, OutputFormatter};
 
 #[derive(Subcommand)]
 pub enum AuthzCommand {
@@ -37,8 +37,16 @@ pub enum AuthzCommand {
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "TYPE", json_path: "type", max_width: None },
-    Column { header: "ENABLE", json_path: "enable", max_width: None },
+    Column {
+        header: "TYPE",
+        json_path: "type",
+        max_width: None,
+    },
+    Column {
+        header: "ENABLE",
+        json_path: "enable",
+        max_width: None,
+    },
 ];
 
 pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &AuthzCommand) -> Result<()> {
@@ -49,23 +57,61 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &AuthzComm
             fmt.print_list(&items, LIST_COLUMNS, None, None);
         }
         AuthzCommand::Get { authz_type } => {
-            super::handle_get(client, fmt, &format!("/authorization/sources/{}", authz_type), LIST_COLUMNS).await?;
+            super::handle_get(
+                client,
+                fmt,
+                &format!("/authorization/sources/{}", authz_type),
+                LIST_COLUMNS,
+            )
+            .await?;
         }
         AuthzCommand::Create { file } => {
-            super::handle_create_or_update(client, fmt, Method::POST, "/authorization/sources", file, "Authorization source created").await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::POST,
+                "/authorization/sources",
+                file,
+                "Authorization source created",
+            )
+            .await?;
         }
         AuthzCommand::Update { authz_type, file } => {
-            super::handle_create_or_update(client, fmt, Method::PUT, &format!("/authorization/sources/{}", authz_type), file, "Authorization source updated").await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::PUT,
+                &format!("/authorization/sources/{}", authz_type),
+                file,
+                "Authorization source updated",
+            )
+            .await?;
         }
         AuthzCommand::Delete { authz_type } => {
-            super::handle_delete(client, fmt, &format!("/authorization/sources/{}", authz_type), &format!("Authorization source '{}' deleted", authz_type)).await?;
+            super::handle_delete(
+                client,
+                fmt,
+                &format!("/authorization/sources/{}", authz_type),
+                &format!("Authorization source '{}' deleted", authz_type),
+            )
+            .await?;
         }
         AuthzCommand::Reorder { file } => {
-            super::handle_create_or_update(client, fmt, Method::POST, "/authorization/sources/order", file, "Authorization order updated").await?;
+            super::handle_create_or_update(
+                client,
+                fmt,
+                Method::POST,
+                "/authorization/sources/order",
+                file,
+                "Authorization order updated",
+            )
+            .await?;
         }
         AuthzCommand::CacheClean { clientid } => {
             if let Some(cid) = clientid {
-                client.delete(&format!("/authorization/cache/{}", cid)).await?;
+                client
+                    .delete(&format!("/authorization/cache/{}", cid))
+                    .await?;
                 fmt.print_success(&format!("Authorization cache cleaned for client '{}'", cid));
             } else {
                 client.delete("/authorization/cache").await?;

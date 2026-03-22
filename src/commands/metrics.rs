@@ -1,8 +1,12 @@
-use anyhow::Result;
 use crate::client::EmqxClient;
 use crate::output::OutputFormatter;
+use anyhow::Result;
 
-pub async fn execute_metrics(client: &EmqxClient, fmt: &OutputFormatter, node: Option<&str>) -> Result<()> {
+pub async fn execute_metrics(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    node: Option<&str>,
+) -> Result<()> {
     let value = if let Some(node) = node {
         client.get(&format!("/nodes/{}/metrics", node)).await?
     } else {
@@ -12,7 +16,11 @@ pub async fn execute_metrics(client: &EmqxClient, fmt: &OutputFormatter, node: O
     Ok(())
 }
 
-pub async fn execute_stats(client: &EmqxClient, fmt: &OutputFormatter, node: Option<&str>) -> Result<()> {
+pub async fn execute_stats(
+    client: &EmqxClient,
+    fmt: &OutputFormatter,
+    node: Option<&str>,
+) -> Result<()> {
     let value = if let Some(node) = node {
         client.get(&format!("/nodes/{}/stats", node)).await?
     } else {

@@ -117,8 +117,7 @@ impl Config {
 
         let url = ctx_config.url.trim_end_matches('/').to_string();
 
-        let auth = if let (Some(key), Some(secret)) =
-            (&ctx_config.api_key, &ctx_config.api_secret)
+        let auth = if let (Some(key), Some(secret)) = (&ctx_config.api_key, &ctx_config.api_secret)
         {
             AuthMethod::ApiKey {
                 key: key.clone(),

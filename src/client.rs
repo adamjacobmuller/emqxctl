@@ -92,23 +92,23 @@ impl EmqxClient {
                 "password": password,
             });
 
-            let resp = self
-                .http
-                .post(&url)
-                .json(&body)
-                .send()
-                .await
-                .map_err(|e| -> anyhow::Error {
-                    if e.is_connect() {
-                        AppError::ConnectionFailed {
-                            url: url.clone(),
-                            source: e,
+            let resp =
+                self.http
+                    .post(&url)
+                    .json(&body)
+                    .send()
+                    .await
+                    .map_err(|e| -> anyhow::Error {
+                        if e.is_connect() {
+                            AppError::ConnectionFailed {
+                                url: url.clone(),
+                                source: e,
+                            }
+                            .into()
+                        } else {
+                            e.into()
                         }
-                        .into()
-                    } else {
-                        e.into()
-                    }
-                })?;
+                    })?;
 
             let status = resp.status();
             if !status.is_success() {
@@ -226,12 +226,18 @@ impl EmqxClient {
             };
 
             let status = resp.status();
-            self.verbose_log(&format!("< {} {}", status.as_u16(), status.canonical_reason().unwrap_or("")));
+            self.verbose_log(&format!(
+                "< {} {}",
+                status.as_u16(),
+                status.canonical_reason().unwrap_or("")
+            ));
 
             // Retry on transient server errors
             if matches!(
                 status,
-                StatusCode::BAD_GATEWAY | StatusCode::SERVICE_UNAVAILABLE | StatusCode::GATEWAY_TIMEOUT
+                StatusCode::BAD_GATEWAY
+                    | StatusCode::SERVICE_UNAVAILABLE
+                    | StatusCode::GATEWAY_TIMEOUT
             ) && attempt < max_retries
             {
                 let delay = Duration::from_millis(500 * 2u64.pow(attempt));
@@ -274,9 +280,7 @@ impl EmqxClient {
                     return Err(AppError::EmqxApi {
                         status: status.as_u16(),
                         code: err_resp.code.unwrap_or_else(|| "UNKNOWN".into()),
-                        reason: err_resp
-                            .reason
-                            .unwrap_or_else(|| response_text.clone()),
+                        reason: err_resp.reason.unwrap_or_else(|| response_text.clone()),
                     }
                     .into());
                 }
@@ -366,13 +370,16 @@ impl EmqxClient {
             return Ok((arr.clone(), meta));
         }
 
-        Ok((vec![resp], PaginationMeta {
-            page: Some(1),
-            limit: None,
-            count: Some(1),
-            hasnext: Some(false),
-            position: None,
-        }))
+        Ok((
+            vec![resp],
+            PaginationMeta {
+                page: Some(1),
+                limit: None,
+                count: Some(1),
+                hasnext: Some(false),
+                position: None,
+            },
+        ))
     }
 
     /// Iterate all pages and return all items.
@@ -433,13 +440,16 @@ impl EmqxClient {
             return Ok((arr.clone(), meta));
         }
 
-        Ok((vec![], PaginationMeta {
-            page: None,
-            limit: None,
-            count: Some(0),
-            hasnext: Some(false),
-            position: None,
-        }))
+        Ok((
+            vec![],
+            PaginationMeta {
+                page: None,
+                limit: None,
+                count: Some(0),
+                hasnext: Some(false),
+                position: None,
+            },
+        ))
     }
 
     /// Upload a file via multipart POST.

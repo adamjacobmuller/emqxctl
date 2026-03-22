@@ -78,4 +78,3 @@ pub fn format_error(err: &anyhow::Error) {
         }
     }
 }
-

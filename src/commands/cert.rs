@@ -1,7 +1,7 @@
-use anyhow::Result;
-use clap::Subcommand;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum CertCommand {
@@ -10,10 +10,26 @@ pub enum CertCommand {
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "ID", json_path: "id", max_width: None },
-    Column { header: "COMMON NAME", json_path: "common_name", max_width: None },
-    Column { header: "NOT BEFORE", json_path: "not_before", max_width: None },
-    Column { header: "NOT AFTER", json_path: "not_after", max_width: None },
+    Column {
+        header: "ID",
+        json_path: "id",
+        max_width: None,
+    },
+    Column {
+        header: "COMMON NAME",
+        json_path: "common_name",
+        max_width: None,
+    },
+    Column {
+        header: "NOT BEFORE",
+        json_path: "not_before",
+        max_width: None,
+    },
+    Column {
+        header: "NOT AFTER",
+        json_path: "not_after",
+        max_width: None,
+    },
 ];
 
 pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &CertCommand) -> Result<()> {

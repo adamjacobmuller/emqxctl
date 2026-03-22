@@ -1,8 +1,8 @@
+use crate::client::EmqxClient;
+use crate::output::OutputFormatter;
 use anyhow::Result;
 use clap::Args;
 use reqwest::Method;
-use crate::client::EmqxClient;
-use crate::output::OutputFormatter;
 
 #[derive(Args)]
 pub struct ApiArgs {
@@ -19,7 +19,10 @@ pub struct ApiArgs {
 }
 
 pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, args: &ApiArgs) -> Result<()> {
-    let method: Method = args.method.parse().map_err(|_| anyhow::anyhow!("Invalid HTTP method: {}", args.method))?;
+    let method: Method = args
+        .method
+        .parse()
+        .map_err(|_| anyhow::anyhow!("Invalid HTTP method: {}", args.method))?;
 
     let body = if let Some(ref data) = args.data {
         Some(serde_json::from_str::<serde_json::Value>(data)?)
@@ -29,7 +32,9 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, args: &ApiArgs)
         None
     };
 
-    let result = client.request(method, &args.path, &[], body.as_ref()).await?;
+    let result = client
+        .request(method, &args.path, &[], body.as_ref())
+        .await?;
     fmt.print_value(&result);
     Ok(())
 }

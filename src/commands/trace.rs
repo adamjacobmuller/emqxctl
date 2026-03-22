@@ -1,12 +1,14 @@
-use anyhow::Result;
-use clap::Subcommand;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum TraceCommand {
     List,
-    Get { name: String },
+    Get {
+        name: String,
+    },
     Create {
         #[arg(long)]
         name: String,
@@ -19,9 +21,15 @@ pub enum TraceCommand {
         #[arg(long)]
         end: Option<String>,
     },
-    Delete { name: String },
-    Stop { name: String },
-    Log { name: String },
+    Delete {
+        name: String,
+    },
+    Stop {
+        name: String,
+    },
+    Log {
+        name: String,
+    },
     Download {
         name: String,
         #[arg(short = 'o', long, default_value = ".")]
@@ -31,21 +39,69 @@ pub enum TraceCommand {
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "NAME", json_path: "name", max_width: None },
-    Column { header: "TYPE", json_path: "type", max_width: None },
-    Column { header: "STATUS", json_path: "status", max_width: None },
-    Column { header: "START", json_path: "start_at", max_width: None },
-    Column { header: "END", json_path: "end_at", max_width: None },
+    Column {
+        header: "NAME",
+        json_path: "name",
+        max_width: None,
+    },
+    Column {
+        header: "TYPE",
+        json_path: "type",
+        max_width: None,
+    },
+    Column {
+        header: "STATUS",
+        json_path: "status",
+        max_width: None,
+    },
+    Column {
+        header: "START",
+        json_path: "start_at",
+        max_width: None,
+    },
+    Column {
+        header: "END",
+        json_path: "end_at",
+        max_width: None,
+    },
 ];
 
 const DETAIL_COLUMNS: &[Column] = &[
-    Column { header: "NAME", json_path: "name", max_width: None },
-    Column { header: "TYPE", json_path: "type", max_width: None },
-    Column { header: "TARGET", json_path: "target", max_width: None },
-    Column { header: "STATUS", json_path: "status", max_width: None },
-    Column { header: "START", json_path: "start_at", max_width: None },
-    Column { header: "END", json_path: "end_at", max_width: None },
-    Column { header: "LOG SIZE", json_path: "log_size", max_width: None },
+    Column {
+        header: "NAME",
+        json_path: "name",
+        max_width: None,
+    },
+    Column {
+        header: "TYPE",
+        json_path: "type",
+        max_width: None,
+    },
+    Column {
+        header: "TARGET",
+        json_path: "target",
+        max_width: None,
+    },
+    Column {
+        header: "STATUS",
+        json_path: "status",
+        max_width: None,
+    },
+    Column {
+        header: "START",
+        json_path: "start_at",
+        max_width: None,
+    },
+    Column {
+        header: "END",
+        json_path: "end_at",
+        max_width: None,
+    },
+    Column {
+        header: "LOG SIZE",
+        json_path: "log_size",
+        max_width: None,
+    },
 ];
 
 pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &TraceCommand) -> Result<()> {
@@ -58,7 +114,13 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &TraceComm
         TraceCommand::Get { name } => {
             super::handle_get(client, fmt, &format!("/trace/{}", name), DETAIL_COLUMNS).await?;
         }
-        TraceCommand::Create { name, trace_type, target, start, end } => {
+        TraceCommand::Create {
+            name,
+            trace_type,
+            target,
+            start,
+            end,
+        } => {
             let mut body = serde_json::json!({
                 "name": name,
                 "type": trace_type,
@@ -78,10 +140,18 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &TraceComm
             }
         }
         TraceCommand::Delete { name } => {
-            super::handle_delete(client, fmt, &format!("/trace/{}", name), &format!("Trace '{}' deleted", name)).await?;
+            super::handle_delete(
+                client,
+                fmt,
+                &format!("/trace/{}", name),
+                &format!("Trace '{}' deleted", name),
+            )
+            .await?;
         }
         TraceCommand::Stop { name } => {
-            client.put(&format!("/trace/{}/stop", name), &serde_json::Value::Null).await?;
+            client
+                .put(&format!("/trace/{}/stop", name), &serde_json::Value::Null)
+                .await?;
             fmt.print_success(&format!("Trace '{}' stopped", name));
         }
         TraceCommand::Log { name } => {
@@ -94,7 +164,9 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &TraceComm
             } else {
                 output.clone()
             };
-            client.download(&format!("/trace/{}/download", name), &dest).await?;
+            client
+                .download(&format!("/trace/{}/download", name), &dest)
+                .await?;
             fmt.print_success(&format!("Trace '{}' downloaded to '{}'", name, dest));
         }
         TraceCommand::Clear => {

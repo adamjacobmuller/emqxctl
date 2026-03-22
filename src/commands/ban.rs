@@ -1,8 +1,8 @@
-use anyhow::Result;
-use clap::Subcommand;
 use crate::cli::PaginationArgs;
 use crate::client::EmqxClient;
 use crate::output::{Column, OutputFormatter};
+use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum BanCommand {
@@ -28,19 +28,53 @@ pub enum BanCommand {
 }
 
 const LIST_COLUMNS: &[Column] = &[
-    Column { header: "WHO", json_path: "who", max_width: None },
-    Column { header: "AS", json_path: "as", max_width: None },
-    Column { header: "REASON", json_path: "reason", max_width: Some(30) },
-    Column { header: "AT", json_path: "at", max_width: None },
-    Column { header: "UNTIL", json_path: "until", max_width: None },
+    Column {
+        header: "WHO",
+        json_path: "who",
+        max_width: None,
+    },
+    Column {
+        header: "AS",
+        json_path: "as",
+        max_width: None,
+    },
+    Column {
+        header: "REASON",
+        json_path: "reason",
+        max_width: Some(30),
+    },
+    Column {
+        header: "AT",
+        json_path: "at",
+        max_width: None,
+    },
+    Column {
+        header: "UNTIL",
+        json_path: "until",
+        max_width: None,
+    },
 ];
 
 pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &BanCommand) -> Result<()> {
     match cmd {
         BanCommand::List { pagination } => {
-            super::handle_paginated_list(client, fmt, "/banned", &[], pagination, LIST_COLUMNS, None).await?;
+            super::handle_paginated_list(
+                client,
+                fmt,
+                "/banned",
+                &[],
+                pagination,
+                LIST_COLUMNS,
+                None,
+            )
+            .await?;
         }
-        BanCommand::Create { who, as_type, reason, until } => {
+        BanCommand::Create {
+            who,
+            as_type,
+            reason,
+            until,
+        } => {
             let mut body = serde_json::json!({
                 "who": who,
                 "as": as_type,
@@ -63,7 +97,13 @@ pub async fn execute(client: &EmqxClient, fmt: &OutputFormatter, cmd: &BanComman
             if parts.len() != 2 {
                 anyhow::bail!("Target must be in format <as>/<who>, e.g. clientid/myclient");
             }
-            super::handle_delete(client, fmt, &format!("/banned/{}/{}", parts[0], parts[1]), &format!("Ban on '{}' removed", target)).await?;
+            super::handle_delete(
+                client,
+                fmt,
+                &format!("/banned/{}/{}", parts[0], parts[1]),
+                &format!("Ban on '{}' removed", target),
+            )
+            .await?;
         }
         BanCommand::Clear => {
             client.delete("/banned").await?;
